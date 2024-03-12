@@ -71,7 +71,10 @@ class _ExampleAppState extends State<ExampleApp> {
                       ],
                     );
                   } catch (exception) {
-                    return Container();
+                    print(exception);
+                    return Container(
+                      child: Text(address.toString()),
+                    );
                   }
                 }),
             ],
