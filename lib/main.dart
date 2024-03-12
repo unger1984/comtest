@@ -40,6 +40,8 @@ class _ExampleAppState extends State<ExampleApp> {
 
   @override
   Widget build(BuildContext context) {
+    print(availablePorts.length);
+
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
@@ -50,22 +52,27 @@ class _ExampleAppState extends State<ExampleApp> {
             children: [
               for (final address in availablePorts)
                 Builder(builder: (context) {
-                  final port = SerialPort(address);
-                  return ExpansionTile(
-                    title: Text(address),
-                    children: [
-                      CardListTile('Description', port.description),
-                      CardListTile('Transport', port.transport.toTransport()),
-                      CardListTile('USB Bus', port.busNumber?.toPadded()),
-                      CardListTile('USB Device', port.deviceNumber?.toPadded()),
-                      CardListTile('Vendor ID', port.vendorId?.toHex()),
-                      CardListTile('Product ID', port.productId?.toHex()),
-                      CardListTile('Manufacturer', port.manufacturer),
-                      CardListTile('Product Name', port.productName),
-                      CardListTile('Serial Number', port.serialNumber),
-                      CardListTile('MAC Address', port.macAddress),
-                    ],
-                  );
+                  try {
+                    final port = SerialPort(address);
+                    return ExpansionTile(
+                      title: Text(address),
+                      children: [
+                        CardListTile('Description', port.description),
+                        CardListTile('Transport', port.transport.toTransport()),
+                        CardListTile('USB Bus', port.busNumber?.toPadded()),
+                        CardListTile(
+                            'USB Device', port.deviceNumber?.toPadded()),
+                        CardListTile('Vendor ID', port.vendorId?.toHex()),
+                        CardListTile('Product ID', port.productId?.toHex()),
+                        CardListTile('Manufacturer', port.manufacturer),
+                        CardListTile('Product Name', port.productName),
+                        CardListTile('Serial Number', port.serialNumber),
+                        CardListTile('MAC Address', port.macAddress),
+                      ],
+                    );
+                  } catch (exception) {
+                    return Container();
+                  }
                 }),
             ],
           ),
