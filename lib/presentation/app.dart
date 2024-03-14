@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:comtest/domain/datasources/printer_source.dart';
-import 'package:comtest/domain/repositories/settings_repository.dart';
 import 'package:comtest/presentation/blocs/printer_bloc.dart';
 import 'package:comtest/presentation/blocs/scanner_cubit.dart';
 import 'package:comtest/presentation/screens/screen_main.dart';
@@ -36,7 +35,6 @@ class _AppState extends State<App> {
           BlocProvider<PrinterBLoC>(
             create: (context) => PrinterBLoC(
               printerSource: GetIt.I<PrinterSource>(),
-              settingsRepository: GetIt.I<SettingsRepository>(),
             ),
           ),
         ],

@@ -1,5 +1,4 @@
 import 'package:comtest/domain/datasources/printer_source.dart';
-import 'package:comtest/domain/repositories/settings_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 enum PrintType {
@@ -48,11 +47,9 @@ class SuccessPrinterState extends PrinterState {
 
 class PrinterBLoC extends Bloc<PrinterEvent, PrinterState> {
   final PrinterSource _printerSource;
-  final SettingsRepository _settingsRepository;
 
-  PrinterBLoC({required PrinterSource printerSource, required SettingsRepository settingsRepository})
+  PrinterBLoC({required PrinterSource printerSource})
       : _printerSource = printerSource,
-        _settingsRepository = settingsRepository,
         super(const PrinterState.loading()) {
     on<PrinterEvent>(
       (event, emitter) => switch (event) {
@@ -68,14 +65,12 @@ class PrinterBLoC extends Bloc<PrinterEvent, PrinterState> {
   Future<void> _init(Emitter<PrinterState> emitter) async {
     emitter(const PrinterState.loading());
     final list = await _printerSource.loadPrinters();
-    final current = _settingsRepository.currentPrinter;
-    emitter(PrinterState.success(list, current));
+    emitter(PrinterState.success(list, null));
   }
 
   Future<void> _print(_PrintPrinterEvent event, Emitter<PrinterState> emitter) async {
     final old = state;
     if (old is SuccessPrinterState) {
-      _settingsRepository.currentPrinter = event.printer;
       if (event.type == PrintType.text) {
         await _printerSource.print(event.printer, event.path);
       } else {
@@ -88,7 +83,6 @@ class PrinterBLoC extends Bloc<PrinterEvent, PrinterState> {
   void _select(_SelectPrinterEvent event, Emitter<PrinterState> emitter) {
     final old = state;
     if (old is SuccessPrinterState) {
-      _settingsRepository.currentPrinter = event.current;
       emitter(PrinterState.success(old.list, event.current));
     }
   }
