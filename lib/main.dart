@@ -1,107 +1,24 @@
+import 'package:bloc_concurrency/bloc_concurrency.dart' as bloc_concurrency;
+import 'package:comtest/domain/datasources/printer_source.dart';
+import 'package:comtest/presentation/app.dart';
+import 'package:comtest/utils/app_bloc_observer.dart';
+import 'package:comtest/utils/logging.dart';
+import 'package:comtest/utils/service_locator.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_libserialport/flutter_libserialport.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+import 'package:logging/logging.dart';
 
-void main() => runApp(ExampleApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-class ExampleApp extends StatefulWidget {
-  @override
-  _ExampleAppState createState() => _ExampleAppState();
-}
+  Logging.setup();
+  await ServiceLocator.setup();
 
-extension IntToString on int {
-  String toHex() => '0x${toRadixString(16)}';
-  String toPadded([int width = 3]) => toString().padLeft(width, '0');
-  String toTransport() {
-    switch (this) {
-      case SerialPortTransport.usb:
-        return 'USB';
-      case SerialPortTransport.bluetooth:
-        return 'Bluetooth';
-      case SerialPortTransport.native:
-        return 'Native';
-      default:
-        return 'Unknown';
-    }
-  }
-}
+  Bloc.observer = AppBlocObserver.instance();
+  Bloc.transformer = bloc_concurrency.sequential<Object?>();
 
-class _ExampleAppState extends State<ExampleApp> {
-  var availablePorts = [];
+  Logger('MAIN').fine(await GetIt.I<PrinterSource>().loadPrinters());
 
-  @override
-  void initState() {
-    super.initState();
-    initPorts();
-  }
-
-  void initPorts() {
-    setState(() => availablePorts = SerialPort.availablePorts);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    print(availablePorts.length);
-
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Flutter Serial Port example'),
-        ),
-        body: Scrollbar(
-          child: ListView(
-            children: [
-              for (final address in availablePorts)
-                Builder(builder: (context) {
-                  try {
-                    final port = SerialPort(address);
-                    return ExpansionTile(
-                      title: Text(address),
-                      children: [
-                        CardListTile('Description', port.description),
-                        CardListTile('Transport', port.transport.toTransport()),
-                        CardListTile('USB Bus', port.busNumber?.toPadded()),
-                        CardListTile(
-                            'USB Device', port.deviceNumber?.toPadded()),
-                        CardListTile('Vendor ID', port.vendorId?.toHex()),
-                        CardListTile('Product ID', port.productId?.toHex()),
-                        CardListTile('Manufacturer', port.manufacturer),
-                        CardListTile('Product Name', port.productName),
-                        CardListTile('Serial Number', port.serialNumber),
-                        CardListTile('MAC Address', port.macAddress),
-                      ],
-                    );
-                  } catch (exception) {
-                    print(exception);
-                    return Container(
-                      child: Text(address.toString()),
-                    );
-                  }
-                }),
-            ],
-          ),
-        ),
-        floatingActionButton: FloatingActionButton(
-          child: Icon(Icons.refresh),
-          onPressed: initPorts,
-        ),
-      ),
-    );
-  }
-}
-
-class CardListTile extends StatelessWidget {
-  final String name;
-  final String? value;
-
-  CardListTile(this.name, this.value);
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        title: Text(value ?? 'N/A'),
-        subtitle: Text(name),
-      ),
-    );
-  }
+  runApp(const App());
 }
