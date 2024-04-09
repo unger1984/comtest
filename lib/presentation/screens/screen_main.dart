@@ -47,6 +47,25 @@ class _ScreenMainState extends State<ScreenMain> {
     }
   }
 
+  Future<void> _handlePrintZPL(String? printer) async {
+    final current = printer;
+    if (current == null) {
+      showDialog(context: context, builder: (context) => PopupAlert(text: 'Не выбран принтер!'));
+    } else {
+      final dir = Directory.systemTemp.createTempSync();
+      final path = "${dir.path}/${randomAlpha(12)}";
+      final temp = File(path)..createSync();
+
+      final data = await rootBundle.loadString("assets/zpl.tpl");
+      const codec = Windows1251Codec();
+      final list = Uint8List.fromList(codec.encode(data.replaceAll(RegExp("\n"), "\r\n")));
+      //
+      await temp.writeAsBytes(list);
+
+      BlocProvider.of<PrinterBLoC>(context).add(PrinterEvent.print(PrintType.cpcl, current, path));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,9 +106,18 @@ class _ScreenMainState extends State<ScreenMain> {
                         // },
                       ),
                       const SizedBox(width: 20),
-                      ElevatedButton(
-                        onPressed: current == null ? null : () => _handlePrintCPCL(current),
-                        child: const Text('Печать CPCL'),
+                      Column(
+                        children: [
+                          ElevatedButton(
+                            onPressed: current == null ? null : () => _handlePrintCPCL(current),
+                            child: const Text('Печать CPCL'),
+                          ),
+                          const SizedBox(height: 5),
+                          ElevatedButton(
+                            onPressed: current == null ? null : () => _handlePrintZPL(current),
+                            child: const Text('Печать ZPL'),
+                          ),
+                        ],
                       ),
                     ],
                   ),
