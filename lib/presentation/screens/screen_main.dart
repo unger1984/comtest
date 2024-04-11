@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:comtest/presentation/blocs/printer_bloc.dart';
@@ -22,23 +23,28 @@ class ScreenMain extends StatefulWidget {
 class _ScreenMainState extends State<ScreenMain> {
   bool _swithc = false;
   bool _check = false;
+  bool _isUTF8 = false;
   SingingCharacter? _character = SingingCharacter.lafayette;
 
-  void _handleSelectPrinter(String? printer) {
-    BlocProvider.of<PrinterBLoC>(context).add(PrinterEvent.select(printer));
+  void _handleSelectPrinter1(String? printer) {
+    BlocProvider.of<PrinterBLoC>(context).add(PrinterEvent.select1(printer));
+  }
+
+  void _handleSelectPrinter2(String? printer) {
+    BlocProvider.of<PrinterBLoC>(context).add(PrinterEvent.select2(printer));
   }
 
   Future<void> _handlePrintCPCL(String? printer) async {
     final current = printer;
     if (current == null) {
-      showDialog(context: context, builder: (context) => PopupAlert(text: 'Не выбран принтер!'));
+      showDialog(context: context, builder: (context) => const PopupAlert(text: 'Не выбран принтер!'));
     } else {
       final dir = Directory.systemTemp.createTempSync();
       final path = "${dir.path}/${randomAlpha(12)}";
       final temp = File(path)..createSync();
 
       final data = await rootBundle.loadString("assets/cpcl.tpl");
-      const codec = Windows1251Codec();
+      final codec = _isUTF8 ? const Utf8Codec() : const Windows1251Codec();
       final list = Uint8List.fromList(codec.encode(data.replaceAll(RegExp("\n"), "\r\n")));
       //
       await temp.writeAsBytes(list);
@@ -50,14 +56,14 @@ class _ScreenMainState extends State<ScreenMain> {
   Future<void> _handlePrintZPL(String? printer) async {
     final current = printer;
     if (current == null) {
-      showDialog(context: context, builder: (context) => PopupAlert(text: 'Не выбран принтер!'));
+      showDialog(context: context, builder: (context) => const PopupAlert(text: 'Не выбран принтер!'));
     } else {
       final dir = Directory.systemTemp.createTempSync();
       final path = "${dir.path}/${randomAlpha(12)}";
       final temp = File(path)..createSync();
 
       final data = await rootBundle.loadString("assets/zpl.tpl");
-      const codec = Windows1251Codec();
+      final codec = _isUTF8 ? const Utf8Codec() : const Windows1251Codec();
       final list = Uint8List.fromList(codec.encode(data.replaceAll(RegExp("\n"), "\r\n")));
       //
       await temp.writeAsBytes(list);
@@ -71,11 +77,12 @@ class _ScreenMainState extends State<ScreenMain> {
     return Scaffold(
       body: BlocBuilder<PrinterBLoC, PrinterState>(
         builder: (context, state) => switch (state) {
-          SuccessPrinterState(:List<String> list, :String? current) => Padding(
+          SuccessPrinterState(:List<String> list, :String? current1, :String? current2) => Padding(
               padding: const EdgeInsets.all(40.0),
               child: Column(
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Column(
@@ -91,31 +98,88 @@ class _ScreenMainState extends State<ScreenMain> {
                           ],
                         ),
                       ),
-                      DropdownMenu<String?>(
-                        // controller: colorController,
-                        label: const Text('Принтер'),
-                        initialSelection: current,
-                        dropdownMenuEntries: [null, ...list]
-                            .map((itm) => DropdownMenuEntry<String?>(value: itm, label: itm ?? 'Не выбрано'))
-                            .toList(),
-                        inputDecorationTheme: const InputDecorationTheme(filled: true),
-                        onSelected: _handleSelectPrinter,
-                        //   setState(() {
-                        //     selectedColor = color;
-                        //   });
-                        // },
-                      ),
-                      const SizedBox(width: 20),
                       Column(
                         children: [
-                          ElevatedButton(
-                            onPressed: current == null ? null : () => _handlePrintCPCL(current),
-                            child: const Text('Печать CPCL'),
+                          Row(
+                            children: [
+                              const Text('Печать в Windows1251'),
+                              const SizedBox(width: 10),
+                              Switch(
+                                value: _isUTF8,
+                                onChanged: (val) {
+                                  setState(() {
+                                    _isUTF8 = val;
+                                  });
+                                },
+                              ),
+                              const SizedBox(width: 10),
+                              const Text('Печать в UTF-8'),
+                            ],
                           ),
-                          const SizedBox(height: 5),
-                          ElevatedButton(
-                            onPressed: current == null ? null : () => _handlePrintZPL(current),
-                            child: const Text('Печать ZPL'),
+                          Row(
+                            children: [
+                              DropdownMenu<String?>(
+                                // controller: colorController,
+                                label: const Text('Принтер 1'),
+                                initialSelection: current1,
+                                dropdownMenuEntries: [null, ...list]
+                                    .map((itm) => DropdownMenuEntry<String?>(value: itm, label: itm ?? 'Не выбрано'))
+                                    .toList(),
+                                inputDecorationTheme: const InputDecorationTheme(filled: true),
+                                onSelected: _handleSelectPrinter1,
+                                //   setState(() {
+                                //     selectedColor = color;
+                                //   });
+                                // },
+                              ),
+                              const SizedBox(width: 20),
+                              Column(
+                                children: [
+                                  ElevatedButton(
+                                    onPressed: current1 == null ? null : () => _handlePrintCPCL(current1),
+                                    child: const Text('Печать CPCL'),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  ElevatedButton(
+                                    onPressed: current1 == null ? null : () => _handlePrintZPL(current1),
+                                    child: const Text('Печать ZPL'),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            children: [
+                              DropdownMenu<String?>(
+                                // controller: colorController,
+                                label: const Text('Принтер 2'),
+                                initialSelection: current2,
+                                dropdownMenuEntries: [null, ...list]
+                                    .map((itm) => DropdownMenuEntry<String?>(value: itm, label: itm ?? 'Не выбрано'))
+                                    .toList(),
+                                inputDecorationTheme: const InputDecorationTheme(filled: true),
+                                onSelected: _handleSelectPrinter2,
+                                //   setState(() {
+                                //     selectedColor = color;
+                                //   });
+                                // },
+                              ),
+                              const SizedBox(width: 20),
+                              Column(
+                                children: [
+                                  ElevatedButton(
+                                    onPressed: current2 == null ? null : () => _handlePrintCPCL(current2),
+                                    child: const Text('Печать CPCL'),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  ElevatedButton(
+                                    onPressed: current2 == null ? null : () => _handlePrintZPL(current2),
+                                    child: const Text('Печать ZPL'),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ],
                       ),

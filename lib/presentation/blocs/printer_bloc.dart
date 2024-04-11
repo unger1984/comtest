@@ -10,7 +10,8 @@ sealed class PrinterEvent {
   const PrinterEvent();
   const factory PrinterEvent.init() = _InitPrinterEvent;
   const factory PrinterEvent.print(PrintType type, String printer, String path) = _PrintPrinterEvent;
-  const factory PrinterEvent.select(String? current) = _SelectPrinterEvent;
+  const factory PrinterEvent.select1(String? current) = _Select1PrinterEvent;
+  const factory PrinterEvent.select2(String? current) = _Select2PrinterEvent;
 }
 
 class _InitPrinterEvent extends PrinterEvent {
@@ -24,15 +25,20 @@ class _PrintPrinterEvent extends PrinterEvent {
   const _PrintPrinterEvent(this.type, this.printer, this.path);
 }
 
-class _SelectPrinterEvent extends PrinterEvent {
+class _Select1PrinterEvent extends PrinterEvent {
   final String? current;
-  const _SelectPrinterEvent(this.current);
+  const _Select1PrinterEvent(this.current);
+}
+
+class _Select2PrinterEvent extends PrinterEvent {
+  final String? current;
+  const _Select2PrinterEvent(this.current);
 }
 
 sealed class PrinterState {
   const PrinterState();
   const factory PrinterState.loading() = LoadingPrinterState;
-  const factory PrinterState.success(List<String> list, String? current) = SuccessPrinterState;
+  const factory PrinterState.success(List<String> list, String? current1, String? current2) = SuccessPrinterState;
 }
 
 class LoadingPrinterState extends PrinterState {
@@ -41,8 +47,9 @@ class LoadingPrinterState extends PrinterState {
 
 class SuccessPrinterState extends PrinterState {
   final List<String> list;
-  final String? current;
-  const SuccessPrinterState(this.list, this.current);
+  final String? current1;
+  final String? current2;
+  const SuccessPrinterState(this.list, this.current1, this.current2);
 }
 
 class PrinterBLoC extends Bloc<PrinterEvent, PrinterState> {
@@ -55,7 +62,8 @@ class PrinterBLoC extends Bloc<PrinterEvent, PrinterState> {
       (event, emitter) => switch (event) {
         _InitPrinterEvent() => _init(emitter),
         _PrintPrinterEvent() => _print(event, emitter),
-        _SelectPrinterEvent() => _select(event, emitter),
+        _Select1PrinterEvent() => _select1(event, emitter),
+        _Select2PrinterEvent() => _select2(event, emitter),
       },
     );
 
@@ -65,7 +73,7 @@ class PrinterBLoC extends Bloc<PrinterEvent, PrinterState> {
   Future<void> _init(Emitter<PrinterState> emitter) async {
     emitter(const PrinterState.loading());
     final list = await _printerSource.loadPrinters();
-    emitter(PrinterState.success(list, null));
+    emitter(PrinterState.success(list, null, null));
   }
 
   Future<void> _print(_PrintPrinterEvent event, Emitter<PrinterState> emitter) async {
@@ -76,14 +84,21 @@ class PrinterBLoC extends Bloc<PrinterEvent, PrinterState> {
       } else {
         await _printerSource.printRaw(event.printer, event.path);
       }
-      emitter(PrinterState.success(old.list, event.printer));
+      emitter(PrinterState.success(old.list, old.current1, old.current2));
     }
   }
 
-  void _select(_SelectPrinterEvent event, Emitter<PrinterState> emitter) {
+  void _select1(_Select1PrinterEvent event, Emitter<PrinterState> emitter) {
     final old = state;
     if (old is SuccessPrinterState) {
-      emitter(PrinterState.success(old.list, event.current));
+      emitter(PrinterState.success(old.list, event.current, old.current2));
+    }
+  }
+
+  void _select2(_Select2PrinterEvent event, Emitter<PrinterState> emitter) {
+    final old = state;
+    if (old is SuccessPrinterState) {
+      emitter(PrinterState.success(old.list, old.current1, event.current));
     }
   }
 }
