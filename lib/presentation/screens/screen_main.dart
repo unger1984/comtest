@@ -47,17 +47,24 @@ class _ScreenMainState extends State<ScreenMain> {
   SerialPort? _com;
   StreamSubscription<Uint8List>? _subscription;
 
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    _com?.close();
+    super.dispose();
+  }
+
   void _comListener(Uint8List data) {
     print('DATA ${String.fromCharCodes(data)}');
     BlocProvider.of<ScannerCubit>(context).scan(String.fromCharCodes(data));
   }
 
   void _handleSelectCom(String? com) {
+    _subscription?.cancel();
     final old = _com;
     if (old != null) {
       old.close();
     }
-    _subscription?.cancel();
     if (com != null) {
       _com = SerialPort(com);
       final port = SerialPort(com);
