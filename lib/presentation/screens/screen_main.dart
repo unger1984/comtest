@@ -129,9 +129,10 @@ class _ScreenMainState extends State<ScreenMain> {
       final path = "${dir.path}/${randomAlpha(12)}";
       final temp = File(path)..createSync();
 
-      final data = await rootBundle.loadString("assets/$template");
-      final codec = _isUTF8 ? const Utf8Codec() : const Windows1251Codec();
-      final list = Uint8List.fromList(codec.encode(data.replaceAll(RegExp("\n"), "\r\n")));
+      final data = await rootBundle.load("assets/$template");
+      // final codec = _isUTF8 ? const Utf8Codec() : const Windows1251Codec();
+      final list = data.buffer.asUint8List();
+      // final list = Uint8List.fromList(data.buffer);
       //
       await temp.writeAsBytes(list);
 
