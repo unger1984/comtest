@@ -49,7 +49,7 @@ class _ScreenMainState extends State<ScreenMain> {
       //
       await temp.writeAsBytes(list);
 
-      BlocProvider.of<PrinterBLoC>(context).add(PrinterEvent.print(PrintType.cpcl, current, path));
+      if (mounted) BlocProvider.of<PrinterBLoC>(context).add(PrinterEvent.print(PrintType.cpcl, current, path));
     }
   }
 
@@ -68,7 +68,26 @@ class _ScreenMainState extends State<ScreenMain> {
       //
       await temp.writeAsBytes(list);
 
-      BlocProvider.of<PrinterBLoC>(context).add(PrinterEvent.print(PrintType.cpcl, current, path));
+      if (mounted) BlocProvider.of<PrinterBLoC>(context).add(PrinterEvent.print(PrintType.cpcl, current, path));
+    }
+  }
+
+  Future<void> _handlePrintTemplate(String template, String? printer) async {
+    final current = printer;
+    if (current == null) {
+      showDialog(context: context, builder: (context) => const PopupAlert(text: 'Не выбран принтер!'));
+    } else {
+      final dir = Directory.systemTemp.createTempSync();
+      final path = "${dir.path}/${randomAlpha(12)}";
+      final temp = File(path)..createSync();
+
+      final data = await rootBundle.loadString("assets/$template");
+      final codec = _isUTF8 ? const Utf8Codec() : const Windows1251Codec();
+      final list = Uint8List.fromList(codec.encode(data.replaceAll(RegExp("\n"), "\r\n")));
+      //
+      await temp.writeAsBytes(list);
+
+      if (mounted) BlocProvider.of<PrinterBLoC>(context).add(PrinterEvent.print(PrintType.cpcl, current, path));
     }
   }
 
@@ -151,6 +170,42 @@ class _ScreenMainState extends State<ScreenMain> {
                           const SizedBox(height: 20),
                           Row(
                             children: [
+                              const Text('Шаблоны:'),
+                              const SizedBox(width: 10),
+                              ElevatedButton(
+                                onPressed: current1 == null ? null : () => _handlePrintTemplate('Tosh01.lbl', current1),
+                                child: const Text('1'),
+                              ),
+                              const SizedBox(width: 5),
+                              ElevatedButton(
+                                onPressed: current1 == null ? null : () => _handlePrintTemplate('Tosh02.lbl', current1),
+                                child: const Text('2'),
+                              ),
+                              const SizedBox(width: 5),
+                              ElevatedButton(
+                                onPressed:
+                                    current1 == null ? null : () => _handlePrintTemplate('tosh_cennik.lbl', current1),
+                                child: const Text('3'),
+                              ),
+                              const SizedBox(width: 5),
+                              ElevatedButton(
+                                onPressed: current1 == null
+                                    ? null
+                                    : () => _handlePrintTemplate('tosh_DataMatrix.lbl', current1),
+                                child: const Text('4'),
+                              ),
+                              const SizedBox(width: 5),
+                              ElevatedButton(
+                                onPressed: current1 == null
+                                    ? null
+                                    : () => _handlePrintTemplate('tosh_new_price.lbl', current1),
+                                child: const Text('5'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            children: [
                               DropdownMenu<String?>(
                                 // controller: colorController,
                                 label: const Text('Принтер 2'),
@@ -178,6 +233,42 @@ class _ScreenMainState extends State<ScreenMain> {
                                     child: const Text('Печать ZPL'),
                                   ),
                                 ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            children: [
+                              const Text('Шаблоны:'),
+                              const SizedBox(width: 10),
+                              ElevatedButton(
+                                onPressed: current2 == null ? null : () => _handlePrintTemplate('Tosh01.lbl', current2),
+                                child: const Text('1'),
+                              ),
+                              const SizedBox(width: 5),
+                              ElevatedButton(
+                                onPressed: current2 == null ? null : () => _handlePrintTemplate('Tosh02.lbl', current2),
+                                child: const Text('2'),
+                              ),
+                              const SizedBox(width: 5),
+                              ElevatedButton(
+                                onPressed:
+                                    current2 == null ? null : () => _handlePrintTemplate('tosh_cennik.lbl', current2),
+                                child: const Text('3'),
+                              ),
+                              const SizedBox(width: 5),
+                              ElevatedButton(
+                                onPressed: current2 == null
+                                    ? null
+                                    : () => _handlePrintTemplate('tosh_DataMatrix.lbl', current2),
+                                child: const Text('4'),
+                              ),
+                              const SizedBox(width: 5),
+                              ElevatedButton(
+                                onPressed: current2 == null
+                                    ? null
+                                    : () => _handlePrintTemplate('tosh_new_price.lbl', current2),
+                                child: const Text('5'),
                               ),
                             ],
                           ),

@@ -1,7 +1,7 @@
 name: comtest
 description: "A new Flutter project."
 publish_to: 'none' 
-version: 1.0.3+3
+version: 1.0.4+4
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -18,7 +18,7 @@ dependencies:
   flutter_bloc: ^8.1.5
   flutter_dotenv: ^5.1.0
 #  flutter_secure_storage: ^9.0.0
-  get_it: ^7.6.8
+  get_it: ^7.7.0
   intl: ^0.19.0
   logging: ^1.2.0
   process_run: ^0.14.2
@@ -29,8 +29,8 @@ dev_dependencies:
     sdk: flutter
 
   build_runner:
-  dart_code_metrics_presets: ^2.11.0
-  flutter_lints: ^3.0.2
+  dart_code_metrics_presets: ^2.12.0
+  flutter_lints: ^4.0.0
   husky: ^0.1.7
 
 dependency_overrides:
@@ -46,6 +46,11 @@ flutter:
     - assets/text.tpl
     - assets/cpcl.tpl
     - assets/zpl.tpl
+    - assets/Tosh01.lbl
+    - assets/Tosh02.lbl
+    - assets/tosh_cennik.lbl
+    - assets/tosh_DataMatrix.lbl
+    - assets/tosh_new_price.lbl
 
     
                                       
